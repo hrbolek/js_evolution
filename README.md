@@ -1,41 +1,42 @@
-## Step 1
+## Step 2
 
 This is "Hello World" application.
 It is based on `react` library which is nice library for building user interface based on component.
 
-### Structure
+### Parametrized components
 
-There is directory `public` where are static files. Check `index.html`. It contains minimal html code.
-The js code is injected at end of head tag.
-
-The source code (javascript) is placed in `src` directory. By default `index.js` is entry point.
-Notice imports, especially `App` which is the first coded component.
+The way we define components imply that if the function has a parameter it can be used inside the function.
+React components could be classes but components defined as functions are preferred.
+Componets can have only one parameter. 
+This parameter is dictionary. 
+In case bellow, this dictionary is decomposed and value of key `user` is passed to body.
+Parameters can have any type.
 
 ```js
-import React from 'react';
-import { createRoot } from 'react-dom/client';
-import { App } from './App';
+export const UserSimple = ({user}) => {
+    return (
+        <div>Hello {user.name}</div>
+    )
+}
+```
+### Code structure
 
-const root = createRoot(document.getElementById('root'));
-root.render(
-    <React.StrictMode>
-        <App />
-    </React.StrictMode>
-);
+There are different approaches how to structure a code.
+Avoid long files and try to place one component in one file.
+Notice that directories can behave like a single file.
+It is possible to export imported components.
+By this way a really large libraries can be created.
+It is also common to make more complex structures where components are grouped into variables which are exported.
+
+```js
+export * from './UserSimple'
 ```
 
-### React component
-
-The code bellow (taken from file `app.js`) is exported constant. 
-The value is anonymous function.
-Return value is html segment.
-
-```js
-export const App = () => {
-    return <div>Hello World</div>
-}
+### How to run
+```bash
+npm run start
 ```
 
 ### Conclusion
 
-Now you have an application which returns `Hello world` on html page.
+We introduce a component with parameters.

@@ -1,3 +1,7 @@
+import { UserSimple } from './Components'
+
 export const App = () => {
-    return <div>Hello World</div>
+
+    const user = {name: "John"}
+    return <UserSimple user={user} />
 }
