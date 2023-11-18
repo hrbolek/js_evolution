@@ -33,6 +33,13 @@ export * from './UserSimple'
 ```
 
 ### How to run
+if not initilized:
+```bash
+npm init
+```
+
+then 
+
 ```bash
 npm run start
 ```
