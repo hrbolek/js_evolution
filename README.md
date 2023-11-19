@@ -1,97 +1,107 @@
-## Step 5
+## Step 6
 
-Managing central state of application (Store).
+A bit styles with boostrap
 
-As there have been added some packages, run
-```bash
-npm install --force
-```
-at first
+### CSS
 
+Cascade Style Sheet is technique for specifying attributes to html elements.
+Html elements are customizable. 
+It is possible to change style of each html element or, and this is prefereable, is possible to assign classes to them.
+Classes are then defined with set of attributes which are transfered to html element having it.
 
-### State
+As this is very general, there are libraries supporting developers in this hard task. 
+One of them is Bootstrap.
+Boostrap library also has a react connector which defines appropriate components.
+Boostrap also defines a grid on which components can be placed, or aligned with.
 
-As mentioned earlier, it is not good idea to spread pieces of state across components. 
-Such approach is hard to maitain. 
-Suggested concept is to create single place where all parts of application state are stored.
-This single place is a store.
+### Container
 
-### State functions
-
-It is possible to write functions like
-```js
-export const CreateItem = (state, action) => {
-    const item = action.payload;
-    const id = item['id'] || uuid1()
-    if (!item['id']) {
-        item['id'] = id
-    }
-    
-    state[id] = item
-    return state
-}
-```
-
-Such function has two parameters `state` and `action`.
-While `state` defines current state, `action` holds all data needed for a change.
-There is a standard to use `type` attribute on `action` which determine a kind of action. 
-This is especially useful for complex state functions. 
-The parameter of change is assigned to `payload` attribute of `action`.
-
-The `CreateItem` function has two parts. First one ensures that new item has an `id` which acts here as primary key (like in database). If `id` is missing, uuid standard is used for calculating new value.
-Second part is just assignement to state (dictionary - like).
-
-You should notice that this function is not pure, it changes an input variable.
-Such approach can have unpredictable consequences so be carefull.
-
-In `Store/reducers.js` are defined other state functions. 
-All of them together define a set of basic operations (CUD) - `create`, `update` and `delete`.
-There is also one extra - `replace` which is usefull when attributes should be deleted.
-
-### State functions composition
-
-In file `Store/store.js` you can find a function which is composition of CUD functions.
-```js
-const reducerIndex = {
-    "CREATE": CreateItem,
-    "UPDATE": UpdateItem,
-    "REPLACE": ReplaceItem,
-    "DELETE": DeleteItem
-}
-
-export const reducer = (state, action) => {
-    const type = action.type
-    const currentReducer = reducerIndex[type]
-    const result = currentReducer(state, action)
-    return {...result}
-}
-```
-Notice usage of `reducerIndex` which allows to simplify implementation of composition. 
-`action.type` determines which state function will be used.
-Functions returns a copy of updated state (spread operator).
-This is important react library has inner mechanism how to determine if something has changed.
-If there is not change in input parameters of component, then cached output is used and component is not calculated.
-Because `App` component is responsible for state maitenance, it must receive all changes.
+Container is component from bootstrap which is used a top of application.
+Its `fuild` attribute means extend width to whole screen.
+You can remove it to see the diference.
 
 ```js
 export const App = () => {
 
     const [db, dispatch] = useReducer(reducer, users)
     return (
-        <>
+        <Container fluid>
             <UserList users={db} dispatch={dispatch}/>
-        </>        
+        </Container>
     )
 }
 ```
-All changes must be propagated to `App` component trought dispatching (calling `dispatch` function).
 
-### State change
+### Card
 
-Now all things are settled and it is possible to add a button to `UserList`.
-There is defined a special button `UserAddButton`
+Card is complex element which allows to display complex element. 
+In our case `user` can be shown this way.
+
+import Card from 'react-bootstrap/Card';
 
 ```js
+export const UserCard = ({user}) => {
+    return (
+        <Card>
+            <Card.Header>
+                {user.name}
+            </Card.Header>
+            <Card.Body>
+                {user.name}
+            </Card.Body>
+            <Card.Footer>
+                {user.name}
+            </Card.Footer>
+        </Card>
+    )
+}
+```
+
+Notice `Header`, `Body` and `Footer` parts.
+
+### Rows and Columns
+
+Cards should be organized inside `Row` and `Col` components.
+They also can be stacked (`Col` can contain `Row` with `Col` ...).
+It is pretty common that vector of entities is encapsulated by `Row` and each item in vector is encapsulated with `Col`. 
+You can see simillar approach in internet shops.
+
+```js
+import { UserAddButton } from "./UserAddButton"
+import { UserCard } from "./UserCard"
+import Row from 'react-bootstrap/Row'
+import Col from 'react-bootstrap/Col'
+
+export const UserList = ({users, dispatch}) => {
+    return (
+        <Row>
+            {Object.entries(users).map(
+                ([id, user]) => <Col key={id} ><UserCard user={user} /></Col>
+            )}
+            <UserAddButton dispatch={dispatch} />
+        </Row>
+    )
+}
+```
+
+### Buttons
+
+Bootstrap also works with colors and offers some kind of standardization.
+Check next variants
+
+```js
+    <Button variant={"primary"} onClick={onClick}>New User</Button>
+    <Button variant={"secondary"} onClick={onClick}>New User</Button>
+    <Button variant={"success"} onClick={onClick}>New User</Button>
+    <Button variant={"warning"} onClick={onClick}>New User</Button>
+    <Button variant={"info"} onClick={onClick}>New User</Button>
+    <Button variant={"light"} onClick={onClick}>New User</Button>
+    <Button variant={"dark"} onClick={onClick}>New User</Button>
+```
+
+```js
+import { Button } from "react-bootstrap"
+
 const AddUser = (user) => {
     return {
         payload: user,
@@ -104,14 +114,39 @@ export const UserAddButton = ({dispatch}) => {
         dispatch(AddUser({name: "Jekyll"}))
     }
     return (
-        <button onClick={onClick}>New User</button>
+        <Button variant={"success"} onClick={onClick}>New User</Button>
     )
 }
 ```
 
-Function `AddUser` creates an action with proper type and payload.
-When button receives a click, `UserAddButton.onClick` calls `dispatch` with parameter defining a wanted operation on state.
-This is propagated to `App` component, where the change is performed, change in state is detected and underlying components are rerendered.
+Also try to add user (click on button) multiple times.
+Cards are stacked somehow. 
+If you want to control it, you can add extra attributes to `Col` component.
+There are `xs`, `sm`, `md`, `lg`, `xl` and `xxl` attributes. 
+Each of them are linked to device where result is displayed.
+
+See https://react-bootstrap.netlify.app/docs/layout/grid#col
+
+
+Try next
+
+```js
+import { UserAddButton } from "./UserAddButton"
+import { UserCard } from "./UserCard"
+import Row from 'react-bootstrap/Row'
+import Col from 'react-bootstrap/Col'
+
+export const UserList = ({users, dispatch}) => {
+    return (
+        <Row>
+            {Object.entries(users).map(
+                ([id, user]) => <Col md={3} key={id} ><UserCard user={user} /></Col>
+            )}
+            <UserAddButton dispatch={dispatch} />
+        </Row>
+    )
+}
+```
 
 ### How to run
 if not initilized:
@@ -127,5 +162,4 @@ npm run start
 
 ### Conclusion
 
-If there is a bit more complex state, `useReducer` hook should be used.
-For such approach state functions must be defined.
+Boostrap simplifies html formating and still allows high flexibility.

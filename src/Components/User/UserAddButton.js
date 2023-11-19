@@ -1,3 +1,5 @@
+import { Button } from "react-bootstrap"
+
 const AddUser = (user) => {
     return {
         payload: user,
@@ -10,6 +12,6 @@ export const UserAddButton = ({dispatch}) => {
         dispatch(AddUser({name: "Jekyll"}))
     }
     return (
-        <button onClick={onClick}>New User</button>
+        <Button onClick={onClick}>New User</Button>
     )
 }
