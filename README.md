@@ -127,5 +127,5 @@ npm run start
 
 ### Conclusion
 
-If there is a bit more complex state, `useReducer` hook could be used.
+If there is a bit more complex state, `useReducer` hook should be used.
 For such approach state functions must be defined.
