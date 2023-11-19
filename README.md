@@ -1,142 +1,110 @@
-## Step 6
+## Step 7
 
-A bit styles with boostrap
+Fully equiped store
 
-### CSS
+### Reminder
 
-Cascade Style Sheet is technique for specifying attributes to html elements.
-Html elements are customizable. 
-It is possible to change style of each html element or, and this is prefereable, is possible to assign classes to them.
-Classes are then defined with set of attributes which are transfered to html element having it.
+State function is function with two parameters, `state` and `action`.
+It is expected that state functions are composed to define full state machine.
+To support state functions composition `action` must include `type` attribute and content should be in `payload`.
 
-As this is very general, there are libraries supporting developers in this hard task. 
-One of them is Bootstrap.
-Boostrap library also has a react connector which defines appropriate components.
-Boostrap also defines a grid on which components can be placed, or aligned with.
+For usage with react the state function must not return mutated state. The return value must be new data structure.
+Such condition especially for complex structures is quite complicated.
 
-### Container
+And there `redux-toolkit` (https://redux-toolkit.js.org/) enters into play.
 
-Container is component from bootstrap which is used a top of application.
-Its `fuild` attribute means extend width to whole screen.
-You can remove it to see the diference.
+### `redux-toolkit`
+
+This library with the help of `immer` (https://immerjs.github.io/immer/) offers a set of functions.
+
+#### `createSlice`
+
+`createSlice` is a function which simplify state function composition. Also it prepares structure for creation of large state automate.
+
+Bellow `reducer` is exported. This reducer works by same way as previous.
+The action types are a bit different. The type of action `CreateItem` is now `"items/CreateItem"`.
 
 ```js
-export const App = () => {
+import { createSlice } from "@reduxjs/toolkit"
+import { CreateItem, UpdateItem, ReplaceItem, DeleteItem } from "./reducers"
 
-    const [db, dispatch] = useReducer(reducer, users)
-    return (
-        <Container fluid>
-            <UserList users={db} dispatch={dispatch}/>
-        </Container>
-    )
-}
+
+export const ItemSlice = createSlice({
+    "name": "items",
+    "initialState": {},
+    reducers: {
+        CreateItem,
+        UpdateItem,
+        ReplaceItem,
+        DeleteItem
+    }
+})
+
+export const { actions, reducer} = ItemSlice
 ```
 
-### Card
+#### `configureStore`
 
-Card is complex element which allows to display complex element. 
-In our case `user` can be shown this way.
-
-import Card from 'react-bootstrap/Card';
+`configureStore` is a function from `redux-toolkit` which prepares a object covering functionalities needed for maitenance of complex centralized variable / store (database like).
 
 ```js
-export const UserCard = ({user}) => {
-    return (
-        <Card>
-            <Card.Header>
-                {user.name}
-            </Card.Header>
-            <Card.Body>
-                {user.name}
-            </Card.Body>
-            <Card.Footer>
-                {user.name}
-            </Card.Footer>
-        </Card>
-    )
-}
+    const store = configureStore({ 
+        reducer: reducer, 
+        preloadedState: users
+    })
 ```
 
-Notice `Header`, `Body` and `Footer` parts.
+The changes in this store can be done only by `dispatch` function.
+Data from store and `dispatch` function must be available anywhere in the application.
+If you do not want to pass those two entities to every component you must use different approach.
 
-### Rows and Columns
+#### `dispatch` anywhere
 
-Cards should be organized inside `Row` and `Col` components.
-They also can be stacked (`Col` can contain `Row` with `Col` ...).
-It is pretty common that vector of entities is encapsulated by `Row` and each item in vector is encapsulated with `Col`. 
-You can see simillar approach in internet shops.
-
-```js
-import { UserAddButton } from "./UserAddButton"
-import { UserCard } from "./UserCard"
-import Row from 'react-bootstrap/Row'
-import Col from 'react-bootstrap/Col'
-
-export const UserList = ({users, dispatch}) => {
-    return (
-        <Row>
-            {Object.entries(users).map(
-                ([id, user]) => <Col key={id} ><UserCard user={user} /></Col>
-            )}
-            <UserAddButton dispatch={dispatch} />
-        </Row>
-    )
-}
-```
-
-### Buttons
-
-Bootstrap also works with colors and offers some kind of standardization.
-Check next variants
+There is possible to set and get context. 
+Such approach has been used while creating `Provider` component.
+Check `AppStore.js` file.
 
 ```js
-    <Button variant={"primary"} onClick={onClick}>New User</Button>
-    <Button variant={"secondary"} onClick={onClick}>New User</Button>
-    <Button variant={"success"} onClick={onClick}>New User</Button>
-    <Button variant={"warning"} onClick={onClick}>New User</Button>
-    <Button variant={"info"} onClick={onClick}>New User</Button>
-    <Button variant={"light"} onClick={onClick}>New User</Button>
-    <Button variant={"dark"} onClick={onClick}>New User</Button>
-```
-
-```js
-import { Button } from "react-bootstrap"
-
-const AddUser = (user) => {
-    return {
-        payload: user,
-        type: "CREATE"
+const users = {
+    "9c501da6-5f66-4932-ad9d-fc00541366d7": {
+        "id": "9c501da6-5f66-4932-ad9d-fc00541366d7",
+        "name": "John"
+    },
+    "0897e2ad-4bab-4234-a0cc-ed780883a2bf": {
+        "id": "0897e2ad-4bab-4234-a0cc-ed780883a2bf",
+        "name": "Julia"
     }
 }
 
-export const UserAddButton = ({dispatch}) => {
-    const onClick = () => {
-        dispatch(AddUser({name: "Jekyll"}))
-    }
+export const AppStore = ({children}) => {
+    const store = configureStore({ 
+        reducer: reducer, 
+        preloadedState: users
+    })
+
     return (
-        <Button variant={"success"} onClick={onClick}>New User</Button>
+        <Provider store={store}>
+            {children}
+        </Provider>
     )
 }
 ```
 
-Also try to add user (click on button) multiple times.
-Cards are stacked somehow. 
-If you want to control it, you can add extra attributes to `Col` component.
-There are `xs`, `sm`, `md`, `lg`, `xl` and `xxl` attributes. 
-Each of them are linked to device where result is displayed.
-
-See https://react-bootstrap.netlify.app/docs/layout/grid#col
+`AppStore` has one parameter `children`.
+This is standard parameter which has all children elements in component tree.
+To pass them to visualization process simply put them where needed - check the statement `{children}`.
 
 
-Try next
+`Provider` component has attribute `store`. Including this component in the application tree allows to get the context value (store) anywhere in application.
+There are special hooks which read the `dispatch` function and content of the store `useSelector`.
+
+The component `UserList` has been changed accordingly. The parameters `users` and `dispatch` have been removed. `useSelector` hook accepts as parameter a functions which returns a part of state (in store). Implementation bellow returns a whole state.
 
 ```js
-import { UserAddButton } from "./UserAddButton"
-import { UserCard } from "./UserCard"
-import Row from 'react-bootstrap/Row'
-import Col from 'react-bootstrap/Col'
-
-export const UserList = ({users, dispatch}) => {
+import { useSelector, useDispatch } from "react-redux"
+export const UserList = () => {
+    const users = useSelector(state => state)
+    const dispatch = useDispatch()
     return (
         <Row>
             {Object.entries(users).map(
@@ -162,4 +130,5 @@ npm run start
 
 ### Conclusion
 
-Boostrap simplifies html formating and still allows high flexibility.
+We have introduced a store which is available anywhere in application without explicit passing it by parameters.
+Now every single component can get `dispatch` (`useDispatch()`) and `state` (`useSelector(state => state)`).

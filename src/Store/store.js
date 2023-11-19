@@ -1,16 +1,18 @@
-
+import { createSlice } from "@reduxjs/toolkit"
 import { CreateItem, UpdateItem, ReplaceItem, DeleteItem } from "./reducers"
 
-const reducerIndex = {
-    "CREATE": CreateItem,
-    "UPDATE": UpdateItem,
-    "REPLACE": ReplaceItem,
-    "DELETE": DeleteItem
-}
 
-export const reducer = (state, action) => {
-    const type = action.type
-    const currentReducer = reducerIndex[type]
-    const result = currentReducer(state, action)
-    return {...result}
-}
+export const ItemSlice = createSlice({
+    "name": "items",
+    "initialState": {},
+    reducers: {
+        CreateItem,
+        UpdateItem,
+        ReplaceItem,
+        DeleteItem
+    }
+})
+
+export const { actions, reducer} = ItemSlice
+
+// console.log(JSON.stringify(actions.CreateItem()))

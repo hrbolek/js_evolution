@@ -3,7 +3,11 @@ import { UserCard } from "./UserCard"
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 
-export const UserList = ({users, dispatch}) => {
+
+import { useSelector, useDispatch } from "react-redux"
+export const UserList = () => {
+    const users = useSelector(state => state)
+    const dispatch = useDispatch()
     return (
         <Row>
             {Object.entries(users).map(

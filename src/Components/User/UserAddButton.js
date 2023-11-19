@@ -3,7 +3,7 @@ import { Button } from "react-bootstrap"
 const AddUser = (user) => {
     return {
         payload: user,
-        type: "CREATE"
+        type: "items/CreateItem"
     }
 }
 
