@@ -12,5 +12,5 @@ export const reducer = (state, action) => {
     const type = action.type
     const currentReducer = reducerIndex[type]
     const result = currentReducer(state, action)
-    return result
+    return {...result}
 }

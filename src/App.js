@@ -1,5 +1,5 @@
-// import { useReducer } from 'react';
-// import { reducer } from './Store';
+import { useReducer } from 'react';
+import { reducer } from './Store';
 import { UserList } from './Components'
 
 
@@ -16,11 +16,10 @@ const users = {
 
 export const App = () => {
 
-    // const [db, dispatch] = useReducer(reducer, {})
-
+    const [db, dispatch] = useReducer(reducer, users)
     return (
         <>
-            <UserList users={users} />
+            <UserList users={db} dispatch={dispatch}/>
         </>        
     )
 }
