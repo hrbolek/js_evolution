@@ -6,7 +6,6 @@ export const UserList = ({users}) => {
             {Object.entries(users).map(
                 ([id, user]) => <UserSimple key={id} user={user} />
             )}
-            {JSON.stringify(users)}
         </>
     )
 }

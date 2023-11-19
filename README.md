@@ -1,46 +1,59 @@
-## Step 3
+## Step 4
 
-This is "Hello World" application.
-It is based on `react` library which is nice library for building user interface based on component.
+Let use more complex structures.
 
-### Callbacks and local state
+### Dictionaries
 
-A parameter of component can be also function.
+Javscript can store complex data in list and / or dictionaries.
+Every item in such variable can be also list or dictionary.
+Dictionary is (in fact) keyed list.
+```js
+const users = {
+    "9c501da6-5f66-4932-ad9d-fc00541366d7": {
+        "id": "9c501da6-5f66-4932-ad9d-fc00541366d7",
+        "name": "John"
+    },
+    "0897e2ad-4bab-4234-a0cc-ed780883a2bf": {
+        "id": "0897e2ad-4bab-4234-a0cc-ed780883a2bf",
+        "name": "Julia"
+    }
+}
+```
+It is very simple to initialize it, as you can see above.
+To add item, you can do 
+```js
+    users["1d7dd5f0-d2e6-4962-aae0-0f8f89668f4d"] = {
+        "id": "1d7dd5f0-d2e6-4962-aae0-0f8f89668f4d",
+        "name": "Jepeto"
+    }
+```
+
+To read an item
+```js
+    const item = users["1d7dd5f0-d2e6-4962-aae0-0f8f89668f4d"]
+```
+
+### React component
+
+To handle such complex data structures, we should build appropriate components.
+We already have a `SimpleUser` component.
+The component maping the dictionary of users into list of `SimpleUser` componets has been declared in `Components/User/UserList.js`
 
 ```js
-import { useState  } from "react"
+import { UserSimple } from "./UserSimple"
 
-export const LikeButton = ({count=1, onChange=null}) => {
-
-    const [counter, setCounter] = useState(count)
-    const localOnClick = () => {
-        setCounter(counter + 1)
-        if (onChange) {
-            onChange(counter + 1)
-        }
-    }
-
-    return <button onClick={localOnClick}>Like! ({counter})</button>
+export const UserList = ({users}) => {
+    return (
+        <>
+            {Object.entries(users).map(
+                ([id, user]) => <UserSimple key={id} user={user} />
+            )}
+        </>
+    )
 }
 ```
 
-In this component, onChange is a function.
-Check its usage in `localOnClick` function, which are linked to button onClick event.
-Anytime a button is clicked, `localOnClick` function is called, and, if defined, consequntly also `onChange`.
-
-To keep local state of variable, `useState` hook (React calls this a hook) is used. 
-This hook (function) returns a list of current value (state) and function which can change the state.
-
-It is important to think who is responsible for state storage. 
-There are two scenarios, both of them have an usage.
-- First, and this is implemented, the component has responsibility for state
-- Second, the parent (direct or indirect) of component receives a changes and stores them and rerenders child.
-
-If `useState` hook is use in a component, such component has its own state.
-It is component with state. Its behaviour depends on input and also on state.
-Stateless components purely depends only on inputs.
-If input are same, the behaviour is same.
-
+Notice how the `SimpleUser` component is imported and how we iterate trought all `entries` in `users`.
 
 ### How to run
 if not initilized:
