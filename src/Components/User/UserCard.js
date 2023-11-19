@@ -1,4 +1,5 @@
 import Card from 'react-bootstrap/Card';
+import { UserDeleteButton } from './UserDeleteButton';
 
 export const UserCard = ({user}) => {
     return (
@@ -10,7 +11,7 @@ export const UserCard = ({user}) => {
                 {user.name}
             </Card.Body>
             <Card.Footer>
-                {user.name}
+                <UserDeleteButton user={user} />
             </Card.Footer>
         </Card>
     )
