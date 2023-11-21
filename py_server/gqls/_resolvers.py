@@ -36,6 +36,7 @@ def createResolveReference(tableName):
     def resolve_reference(cls, info: strawberry.types.Info, id: uuid.UUID):
         table = db.get(tableName, None)
         assert table is not None, f"Table '{tableName}' not found"
+        id = f"{id}"
         row = table.get(id, None)
         return row
     return resolve_reference
@@ -45,6 +46,7 @@ def createResolveById(tableName, GQLModel):
     def by_id(self, info: strawberry.types.Info, id: uuid.UUID) -> GQLModel:
         table = db.get(tableName, None)
         assert table is not None, f"Table '{tableName}' not found"
+        id = f"{id}"
         row = table.get(id, None)
         return row        
     return by_id
@@ -66,9 +68,10 @@ def createInsert(tableName, InputModel, ResultModel):
         assert table is not None, f"Table '{tableName}' not found"
         if dictData.get('id', None) in [None, ""]:
             dictData["id"] = f"{uuid.uuid1()}"
-        row = table.get(dictData["id"], None)
-        assert row is None, f"Data with id=`{row['id']}` already exists"
-        table[dictData['id']] = {**dictData}
+        id = f"{dictData['id']}"
+        row = table.get(id, None)
+        assert row is None, f"Data with id=`{id}` already exists"
+        table[id] = {**dictData}
         result = ResultModel(id = dictData["id"], msg= "ok")
         return result
     return insert
@@ -77,15 +80,16 @@ def createUpdate(tableName, InputModel, ResultModel):
     @strawberry.mutation(description=f"Insert operation")
     def update(self, info: strawberry.types.Info, input: InputModel) -> ResultModel:
         dictData = strawberry.asdict(input)
+        id = f"{dictData['id']}"
         table = db.get(tableName, None)
         assert table is not None, f"Table '{tableName}' not found"
-        row = table.get(dictData['id'], None)
-        assert row is not None, f"record with id=`{row[dictData['id']]}` does not exists"
+        row = table.get(id, None)
+        assert row is not None, f"record with id=`{id}` does not exists"
         
         dictData = {key: value for key, value in dictData.items() if value is not None}
 
-        table[dictData["id"]] = {**row, **dictData}
-        result = ResultModel(id = dictData["id"], msg= "ok")
+        table[id] = {**row, **dictData}
+        result = ResultModel(id= dictData["id"], msg= "ok")
         return result
     return update
 
@@ -93,11 +97,13 @@ def createDelete(tableName, InputModel, ResultModel):
     @strawberry.mutation(description=f"Insert operation")
     def delete(self, info: strawberry.types.Info, input: InputModel) -> ResultModel:
         dictData = strawberry.asdict(input)
+        id = f"{dictData['id']}"
+        print("delete", dictData)
         table = db.get(tableName, None)
         assert table is not None, f"Table '{tableName}' not found"
-        row = table.get(dictData['id'], None)
-        assert row is not None, f"record with id=`{row[dictData['id']]}` does not exists"
-        del table[dictData["id"]]
+        row = table.get(id, None)
+        assert row is not None, f"record with id=`{id}` does not exists"
+        del table[id]
         result = ResultModel(id = dictData["id"], msg= "ok")
         return result
     return delete
