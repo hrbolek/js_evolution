@@ -289,9 +289,4 @@ npm run start
 
 ### Conclusion
 
-`fetch` is method which allows ask server for some data.
-When response is reived, they should be stored in store.
-The process `ask for data` -> `store data` should be done in asynchronous action which is dispatchable.
-
-Asynchronous action is a special function with parameters `dispatch` and `getState`. 
-When dispatching such action it is possible to perform extra statements (aka server call) before final dispatch.
+We implemented CRUD operations on backend (server) and in pesimistic update also in local store.
