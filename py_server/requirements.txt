@@ -1,0 +1,9 @@
+fastapi[all]
+uvicorn[standard]
+gunicorn
+
+asyncpg
+
+pydantic
+starlette
+strawberry-graphql

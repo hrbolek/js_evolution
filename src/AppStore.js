@@ -1,6 +1,8 @@
-import { Provider } from 'react-redux'
+import { Provider, useDispatch } from 'react-redux'
 import { configureStore } from '@reduxjs/toolkit'
 import { reducer } from './Store'
+import { useEffect } from 'react'
+import { UserFetchAllActionAsync } from './Actions/User/UserFetchAllActionAsync'
 
 const users = {
     "9c501da6-5f66-4932-ad9d-fc00541366d7": {
@@ -13,14 +15,25 @@ const users = {
     }
 }
 
+const AppStoreInitializer = () => {
+    const dispatch = useDispatch()
+    useEffect(
+        () => {
+            dispatch(UserFetchAllActionAsync())
+        }
+    )
+    return null
+}
+
 export const AppStore = ({children}) => {
     const store = configureStore({ 
         reducer: reducer, 
-        preloadedState: users
+        preloadedState: {}
     })
 
     return (
         <Provider store={store}>
+            <AppStoreInitializer />
             {children}
         </Provider>
     )
