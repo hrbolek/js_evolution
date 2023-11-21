@@ -1,164 +1,274 @@
-## Step 9
+## Step 10
 
-Communication with server
+Full CRUD operations with server 
 
-### Run server
+### CRUD
 
-The server is written in python. 
-It is based on GraphQL endpoint.
-To run it, you should create virtual environment and install libraries referenced in `requirements.txt` file.
+CRUD stands for Create, Read, Update and Delete operations.
+All operations should be persistent (stored) with the help od backend.
+The backend is alredy introducen, now we should implementa appropriate operations on client in Javascript language.
 
-After that execute
-```bash
-uvicorn py_server.main:app
-```
-
-Alternatively you can include extra parameters.
-```bash
-uvicorn py_server.main:app --port 8888 --reload
-```
-
-This brings up the serve (backend).
 
 ### fetch function
 
-There is `fetch` (https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch) function included in standard html javascript library.
-This functions "calls" server for a response.
-The response is received on client in asynchronous mode.
-So the returned value of `fetch` function is `Promise`.
+Just reminder, that there is `fetch` (https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch) function included in standard html javascript library. 
+We also have created extra layer which help us to centralize some shared parameters (url as example). Extra functions are defined in `Actions/authorizedFetch.js` file.
 
-`Promise` can be awaited, `Promise` is also "thenable".
-This means that often is followed by `.then(response => response.json())` or similar statement. 
-Such statements can be stacked.
+### Queries for CUD
 
+Structure of all queries and appropriate packets are defined by server.
+Queries bellow are in standard GraphQL.
 
-### Extra fetch Layer
-
-To simplify the fetch process extra functions are defined in `Actions/authorizedFetch.js` file.
-This implementation allows to include extra (alwys valid) parameters.
-It also decodes incomming responses as jsons.
+#### Create operation Query
 
 ```js
-export const URL = "/gql"
-export const buildPayload = ({query, variables}) => (
-    {
-        body: JSON.stringify({query, variables})
-    }
-)
-
-export const authorizedFetch = (payload) => {
-    const extendedPayload = {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        ...payload
-    }
-    return fetch(URL, extendedPayload).then(response => response.json())
-}
-```
-
-### Fetching users from server
-
-When the application starts the first fetch for user list is initiated.
-The query sent to server is
-```gql
-{
-    result: userPage {
-        __typename
-        id
-        name
-        surname
-        email
-    }
-}
-```
-
-Query is transformed into payload and sent to server.
-When server respons, response is decoded and for each received user is dispatched `action.ItemUpdate`.
-
-All those parts are implemented in action `UserFetchAllActionAsync`
-```js
-const BuildQueryUserFetchAll = () => {
+const BuildQueryUserInsert = (user) => {
     return buildPayload({
-        query: `{
-            result: userPage {
-              __typename
+        query: `mutation($name: String!) {
+            result: userInsert(input: {name: $name}) {
               id
-              name
-              surname
-              email
+              msg
+              user {
+                __typename
+                id
+                name
+                surname
+                email
+              }
             }
-          }`
+          }`,
+          variables: {...user}
+    })
+}
+```
+
+#### Update operation Query
+
+```js
+const BuildQueryUserUpdate = (user) => {
+    return buildPayload({
+        query: `mutation($id: UUID!, $name: String, $surname: String, $email: String) {
+            result: userUpdate(input: {id: $id, name: $name, surname: $surname, email: $email}) {
+              id
+              msg
+              user {
+                __typename
+                id
+                name
+                surname
+                email
+              }
+            }
+          }`,
+          variables: {...user}
+    })
+}
+```
+
+#### Delete operation Query
+
+```js
+const BuildQueryUserDelete = (user) => {
+    return buildPayload({
+        query: `mutation($id: UUID!) {
+            result: userDelete(input: {id: $id}) {
+              id
+              msg
+            }
+          }`,
+          variables: {...user}
     })
 }
 
-export const UserFetchAllActionAsync = () => async (dispatch, getState) => {
-    const payload = BuildQueryUserFetchAll()
+```
+
+### Dispatchable Asynchronous Actions for CUD
+
+All asynchronous actions receives a response from server in asynchronous mode (notice `await` keyword). 
+Then they analyse result and if result is appropriate they dispatch action (performs local update).
+
+Scenario when at first the server is updated and then local update is made is "pesimistic" scenario. Its advance is that local state is always ok.
+
+Also notice that all actions returns the decodec recieved data (`jsondata`).
+Because call of `dispatch` with action in form of functions returns a value of that function, it is possible at place where `dispatch` is called receive this result, evaluate it and, probably, display an error if something went wrong.
+
+#### Asynchronous Action Create
+
+```js
+export const UserInsertActionAsync = (user) => async (dispatch, getState) => {
+    const payload = BuildQueryUserInsert(user)
     const json = await authorizedFetch(payload)
     
     const jsondata = json.data
-    const users = jsondata.result
-    users.forEach(
-        user => {
-            const action = actions.UpdateItem(user)
-            dispatch(action)
-        }
-    );
+    const result = jsondata.result
+    const msg = result.msg
+    const newUser = result.user
+    if (msg === "ok") {
+        dispatch(actions.UpdateItem(newUser))
+    }
+    
     return jsondata
 }
 ```
-Notice that `UserFetchAllActionAsync` is compatible with `dispatch` system, so it can be dispatched.
-Also notice that body is `async` and `authorizedFetch` is awaited.
 
-### Initialization of store from server
-
-Initialization of store from server should be done only once, when application starts.
-It must be done when store is initialized.
-As appropriate point `AppStore` component could be right.
-
-The is defined component `AppStoreInitializer` which is empty component.
-Its role is to dispatch `UserFetchAllActionAsync` action.
-Other things are done automaticaly.
+#### Asynchronous Action Update
 
 ```js
-const AppStoreInitializer = () => {
-    const dispatch = useDispatch()
-    useEffect(
-        () => {
-            dispatch(UserFetchAllActionAsync())
-        }
-    )
-    return null
+export const UserUpdateActionAsync = (user) => async (dispatch, getState) => {
+    const payload = BuildQueryUserUpdate(user)
+    const json = await authorizedFetch(payload)
+    
+    const jsondata = json.data
+    const result = jsondata.result
+    const msg = result.msg
+    const newUser = result.user
+    if (msg === "ok") {
+        dispatch(actions.UpdateItem(newUser))
+    }
+    
+    return jsondata
 }
+```
 
-export const AppStore = ({children}) => {
-    const store = configureStore({ 
-        reducer: reducer, 
-        preloadedState: {}
-    })
+#### Asynchronous Action Delete
+
+```js
+export const UserDeleteActionAsync = (user) => async (dispatch, getState) => {
+    const payload = BuildQueryUserDelete(user)
+    const json = await authorizedFetch(payload)
+    
+    const jsondata = json.data
+    const result = jsondata.result
+    const msg = result.msg
+    if (msg === "ok") {
+        dispatch(actions.DeleteItem(user))
+    }
+    
+    return jsondata
+}
+```
+
+### React components with support of CUD operations
+
+#### Create button
+This is very simple component based on `button`.
+If it is clicked, it dispatch asynchronous function `UserInsertActionAsync`.
+Nothing else is needed.
+
+```js
+export const UserAddButton = () => {
+    const dispatch = useDispatch()
+    const onClick = () => {
+        dispatch(UserInsertActionAsync({name: "Jekyll"}))
+    }
+    return (
+        <Button onClick={onClick}>New User</Button>
+    )
+}
+```
+
+#### Delete button
+
+Nearly same as create button.
+There is little difference. 
+Instead of use `button` a bit more complex component are used.
+This allows to force user confirm that the deletion process is really wanted (click on two buttons).
+
+```js
+export const UserDeleteButton = ({user}) => {
+    const dispatch = useDispatch()
+    const onDelete = () => dispatch(UserDeleteActionAsync(user))
 
     return (
-        <Provider store={store}>
-            <AppStoreInitializer />
-            {children}
-        </Provider>
+        <DeleteButton onDelete={onDelete}>
+            <TrashFill />
+        </DeleteButton>
     )
 }
 ```
 
-At this point we have incomming data from server stored in store.
-UI is refreshed when server responds.
+#### Change attributes
 
-### Extra configuration
+This is the most difficult process.
+At first we need an input element which displays value (as na example name of user), allows to edit it, catch the changes, sent changes to server and when server responds "ok", change also local value (name of user).
 
-In `package.json` file is key:
-```json
-    "proxy": "http://127.0.0.1:8000/",
+Such edit (keyboard typings) can be quite fast and it is not wanted to send an extra packet to server with change one letter.
+To cover such situation, there is delayer which suspends `onChange` callback.
+When nothing happends for several miliseconds, `onChange` is called.
+
+This `Delayer` is implemented in `Components/General/CreateDelayer.js` file.
+`TextInput` is component responsible for displaying of editable value (user name). 
+There is `Delayer` used. 
+Because the `TextInput` component is rerendered quite often, it is important to memorize `Delayer`, this is the reason why `useState` is used for its memorization.
+Also the text value must be memorized and again `useState` is used.
+
+```js
+export const TextInput = ({value, onChange, placeholder}) => {
+    const [localValue, setLocalValue] = useState(value)  
+    const [delayer] = useState(() => CreateDelayer())   
+    const localOnChange = 
+        (e) => {
+            const newValue = e.target.value
+            setLocalValue(newValue)
+            if (onChange) {
+                delayer(() => onChange(newValue))
+            }
+        }
+    const onBlur = 
+        (e) => {
+            const newValue = e.target.value
+            if (newValue !== localValue) {
+                localOnChange(e)
+                onChange(newValue)
+            }
+        }
+    return (
+        <input className="form-control" placeholder={placeholder} value={localValue} onChange={localOnChange} onBlur={onBlur}/>
+    )
+}
 ```
-which sets a proxy. 
-This means that if javascript program (developer server) is not capable to react to url based requests, it pass url command to `proxy` key having value `http://127.0.0.1:8000/`.
-This is point where `py_server` responds.
+
+User entity has `name`, `surname` and `email` attributes.
+All of them shoul be available for edit.
+This user interface is encapsulated in `UserCard` component.
+
+```js
+export const UserCard = ({user}) => {
+    const dispatch = useDispatch()
+    const onUserChange = (newUser) => {
+        dispatch(UserUpdateActionAsync(newUser))
+    }
+    const onAttributeChange = (value, name) => {
+        const newUser = {...user}
+        newUser[name] = value
+        onUserChange(newUser)
+    }
+    const onChangeName = (value) => onAttributeChange(value, "name")
+    const onChangeSurname = (value) => onAttributeChange(value, "surname")
+    const onChangeEmail = (value) => onAttributeChange(value, "email")
+    return (
+        <Card>
+            <Card.Header>
+                <PersonFill/> User
+            </Card.Header>
+            <Card.Body>
+                <TextInput value={user.name} onChange={onChangeName} />
+                <TextInput value={user.surname} onChange={onChangeSurname} />
+                <TextInput value={user.email} onChange={onChangeEmail} />
+            </Card.Body>
+            <Card.Footer>
+                <UserDeleteButton user={user} />
+            </Card.Footer>
+        </Card>
+    )
+}
+```
+
+`TextInput`s are introduced in `Card` and changes are monitored. 
+These changes are delayed. When change is done, `onAttributeChange` is called and then `UserUpdateActionAsync` action is dispatched.
+
+The dispatch process sends appropriate data to server and if server responds with "ok", local change is done.
+If function `onUserChange` is possible to append error handling as `dispatch` return a decoded packet from server response.
 
 ### How to run
 if not initilized:

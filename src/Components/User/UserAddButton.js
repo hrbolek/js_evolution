@@ -1,15 +1,11 @@
 import { Button } from "react-bootstrap"
+import { UserInsertActionAsync } from '../../Actions'
+import { useDispatch } from "react-redux"
 
-const AddUser = (user) => {
-    return {
-        payload: user,
-        type: "items/CreateItem"
-    }
-}
-
-export const UserAddButton = ({dispatch}) => {
+export const UserAddButton = () => {
+    const dispatch = useDispatch()
     const onClick = () => {
-        dispatch(AddUser({name: "Jekyll"}))
+        dispatch(UserInsertActionAsync({name: "Jekyll"}))
     }
     return (
         <Button onClick={onClick}>New User</Button>

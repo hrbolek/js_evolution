@@ -3,19 +3,26 @@ import { buildPayload, authorizedFetch } from "../authorizedFetch"
 
 const BuildQueryUserDelete = (user) => {
     return buildPayload({
-        query: `{
-            result: userPage {
-              __typename
+        query: `mutation($id: UUID!) {
+            result: userDelete(input: {id: $id}) {
               id
-              name
-              surname
-              email
+              msg
             }
-          }`
+          }`,
+          variables: {...user}
     })
 }
 
-export const UserDeleteActionAsync = (user) => (dispatch, getState) => {
+export const UserDeleteActionAsync = (user) => async (dispatch, getState) => {
+    const payload = BuildQueryUserDelete(user)
+    const json = await authorizedFetch(payload)
     
-    dispatch(actions.DeleteItem(user))
+    const jsondata = json.data
+    const result = jsondata.result
+    const msg = result.msg
+    if (msg === "ok") {
+        dispatch(actions.DeleteItem(user))
+    }
+    
+    return jsondata
 }
